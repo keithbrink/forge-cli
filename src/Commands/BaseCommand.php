@@ -2,8 +2,6 @@
 
 namespace Sven\ForgeCLI\Commands;
 
-use Sven\FileConfig\Drivers\Json;
-use Sven\FileConfig\File;
 use Sven\FileConfig\Store;
 use Sven\ForgeCLI\Contracts\NeedsForge;
 use Symfony\Component\Console\Command\Command;
@@ -30,16 +28,14 @@ abstract class BaseCommand extends Command
     protected $optionMap = [];
 
     /**
+     * @param \Sven\FileConfig\Store     $config
      * @param \Themsaid\Forge\Forge|null $forge
-     *
-     * @throws \Symfony\Component\Console\Exception\LogicException
-     * @throws \LogicException
      */
-    public function __construct(Forge $forge = null)
+    public function __construct(Store $config, Forge $forge = null)
     {
         parent::__construct();
 
-        $this->config = $this->getFileConfig();
+        $this->config = $config;
 
         if ($this instanceof NeedsForge) {
             $this->forge = $forge ?: new Forge($this->config->get('key'));
@@ -165,20 +161,5 @@ abstract class BaseCommand extends Command
                 sprintf('The option "%s" is required.', $key)
             );
         }
-    }
-
-    /**
-     * @return \Sven\FileConfig\Store
-     */
-    protected function getFileConfig()
-    {
-        $home = strncasecmp(PHP_OS, 'WIN', 3) === 0 ? $_SERVER['USERPROFILE'] : $_SERVER['HOME'];
-        $configFile = $home.DIRECTORY_SEPARATOR.'forge.json';
-
-        if (!file_exists($configFile)) {
-            file_put_contents($configFile, '{}');
-        }
-
-        return new Store(new File($configFile), new Json());
     }
 }
